@@ -25,34 +25,30 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
-function reply(replyToken){
-  app.post("/reply", (req,res) => {
-    const options =  {
-      method: "POST",
-      url: "https://api.line.me/v2/bot/message/reply",
-      headers: {
-        Authorization: "Bearer " + configFile.channelAccessToken,
-        "Content-Type": "application/json",
+function reply(replytoken) {
+  let headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer {***REMOVED***}'
+  }
+  let body = JSON.stringify({
+      replyToken: replytoken,
+      messages: [{
+          type: 'text',
+          text: 'Hello'
       },
-      body: {
-        replyToken: replyToken,
-        messages: [{
-          "type":"text",
-          "text":"Hello, user"
-        }],
-      },
-      json: true,
-    };
-    request(options, function (error, response) {
-      if (error) throw new Error(error);
-      // console.log("DATA : " + JSON.stringify(data));
-      res.send(
-        "Successfully send : " + options + " To : " + replyToken
-      );
-    });
+      {
+          type: 'text',
+          text: 'How are you?'
+      }]
+  })
+  request.post({
+      url: 'https://api.line.me/v2/bot/message/reply',
+      headers: headers,
+      body: body
+  }, (err, res, body) => {
+      console.log('status = ' + res.statusCode);
   });
 }
-
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
