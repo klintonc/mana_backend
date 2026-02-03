@@ -1,7 +1,5 @@
-import { Request } from "tedious";
-import { updateBillQuery } from "../../sqlQuery";
-import { queryDatabase } from "../../database";
-import billValidations from "../../validations/bill";
+import transacRepository from "../../repositories/TransacSumHistoryRepository.js";
+import billValidations from "../../validations/bill/index.js";
 
 const update = async (req, res) => {
   try {
@@ -12,16 +10,14 @@ const update = async (req, res) => {
     if (typeof validated === "object")
       return res.status(500).json({ message: validated });
 
-    // update bill
-    const request = new Request(updateBillQuery(body), (error, rowCount) => {
-      if (error)
-        return res
-          .status(404)
-          .json({ message: "Update Bill failed.", error: error });
-      else res.status(200).json({ message: "Bill is updated" });
+    // Update bill using repository with parameterized query
+    await transacRepository.updateBill(body.transacSumId, {
+      transferSum: body.transferSum,
+      cashSum: body.cashSum,
+      posSum: body.posSum,
     });
 
-    queryDatabase(request);
+    res.status(200).json({ message: "Bill is updated" });
   } catch (error) {
     console.log("Error", error);
     return res.status(500).json({ message: "Oops! Something went wrong!" });

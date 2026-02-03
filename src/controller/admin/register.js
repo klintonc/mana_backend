@@ -1,64 +1,29 @@
-import { Request } from "tedious";
-import { createAdminQuery, userExists } from "../../sqlQuery";
-import { queryDatabase } from "../../database";
-import adminValidation from "../../validations/admin";
-import bcrypt from "bcrypt";
+import userRepository from '../../repositories/UserRepository.js';
+import adminValidation from '../../validations/admin/index.js';
+import bcrypt from 'bcrypt';
 
-const register = async (req, res, next) => {
+const register = async (req, res) => {
   try {
     const { body } = req;
 
-    // check user input validation
     const validated = adminValidation.register(body);
-    if (typeof validated === "object")
-      return res.status(500).json({ message: validated });
+    if (typeof validated === 'object') return res.status(500).json({ message: validated });
 
-    const verifyUser = new Request(
-      userExists({ userId: body.username }),
-      (error, rowCount) => {
-        if (error) res.status(500).json({ message: error });
-        else {
-          if (rowCount === 1) {
-            res.status(404).json({ message: "This admin already exists." });
-          } else {
-            // hash password
-            bcrypt.genSalt(10, (saltErr, salt) => {
-              if (saltErr) return next(saltErr);
-              bcrypt.hash(
-                body.password,
-                salt,
-                function (hashErr, hashedPassword) {
-                  if (hashErr) return next(hashErr);
+    const existingUser = await userRepository.findByUserId(body.username);
 
-                  // store admin
-                  const request = new Request(
-                    createAdminQuery(body, hashedPassword),
-                    (err, row) => {
-                      if (err)
-                        return res.status(404).json({
-                          message: "Admin registeration failed",
-                          error: err,
-                        });
-                      else
-                        res
-                          .status(200)
-                          .json({ message: "Admin successfully registered." });
-                    }
-                  );
+    if (existingUser) {
+      return res.status(404).json({ message: 'This admin already exists.' });
+    }
 
-                  queryDatabase(request);
-                }
-              );
-            });
-          }
-        }
-      }
-    );
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(body.password, salt);
 
-    queryDatabase(verifyUser);
-  } catch (err) {
-    console.log("Error", error);
-    return res.status(500).json({ message: "Oops! Something went wrong!" });
+    await userRepository.createAdmin(body, hashedPassword);
+
+    res.status(200).json({ message: 'Admin successfully registered.' });
+  } catch (error) {
+    console.log('Error', error);
+    return res.status(500).json({ message: 'Oops! Something went wrong!' });
   }
 };
 
