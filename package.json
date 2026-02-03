@@ -25,7 +25,7 @@
     "moment-timezone": "^0.5.32",
     "mssql": "^12.2.0",
     "multer": "^1.4.2",
-    "passport": "^0.4.1",
+    "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
