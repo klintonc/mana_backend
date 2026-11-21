@@ -3,9 +3,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { initializeDatabase } from './database/index.js';
 
-import Bill from './routes/bill/index.js';
-import Line from './routes/line/index.js';
-import Admin from './routes/admin/index.js';
+import Bill from './routes/bill.js';
+import Line from './routes/line.js';
+import Admin from './routes/admin.js';
 
 const app = express();
 
@@ -21,12 +21,16 @@ app.use('/api/v1/admin', Admin);
 
 const PORT = process.env.PORT || 4000;
 
-try {
-  await initializeDatabase();
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-} catch (error) {
-  console.error('Failed to initialize database:', error);
-  process.exit(1);
-}
+const start = async () => {
+  try {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    process.exit(1);
+  }
+};
+
+start();
